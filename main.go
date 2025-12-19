@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"io"
+	"errors"
 
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
@@ -35,11 +37,11 @@ func main() {
 
 	switch selectNumber {
 	case 1:
-		taxCalculate()
+		calculateTax()
 	case 2:
-		compoundInterestCaluculate()
+		caluculateCompoundInterest()
 	case 3:
-		csvRead()
+		readCsv()
 	case 4:
 		pointerExample()
 	default:
@@ -48,7 +50,7 @@ func main() {
 
 }
 
-func taxCalculate() {
+func calculateTax() {
 	var price int
 	var priceWithTax float64
 	const tax = 1.10
@@ -66,7 +68,7 @@ func taxCalculate() {
 
 }
 
-func compoundInterestCaluculate() {
+func caluculateCompoundInterest() {
 	var principal int
 	var rate float64
 	var numberOfCal int
@@ -87,7 +89,7 @@ func compoundInterestCaluculate() {
 	fmt.Println("計算結果:", int(result))
 }
 
-func csvRead() {
+func readCsv() {
 	f, err := os.Open("ご利用明細_202512.csv")
 	// ファイルが存在するか否か
 	if err != nil {
@@ -105,11 +107,14 @@ func csvRead() {
 
 	for {
 		// recordに行ごとのデータを格納
+		// Goのerrは失敗フラグではなく、状態通知（成功、終了、失敗）を伝えるもの
 		record, err := r.Read()
 		// 各行ごとのデータを読み込めるかどうか
 		if err != nil {
 			// ファイル内のデータがもう存在しないかどうか
-			if err.Error() == "EOF" {
+			// err.Error() == "EOF" はやめた方がいい。エラー文字列比較は壊れやすい。Go では io.EOF を使うのが定番。
+			// errors.Is(a, b)は"aはbというエラーか"という意味
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			fmt.Println("csv読込エラー:", err)
